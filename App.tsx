@@ -6,9 +6,10 @@ import AddPlace from './screens/AddPlace';
 import React, { useEffect, useState } from 'react';
 import IconButton from './UI/IconButton';
 import Map from './screens/Map'; 
-import { Place } from 'models/place';
+import Place from 'models/place';
 import AppLoading from 'expo-app-loading';
 import { initializeDatabase } from './util/database';
+import PlaceDetails from './screens/PlaceDetails';
 
 export type RootStackParamList = {
   allPlaces: {place: Place};
@@ -16,6 +17,7 @@ export type RootStackParamList = {
     pickedLatitude: number;
     pickedLongitude: number;
   };
+  placeDetails: { placeId: number };
   Map: undefined;
 };
 
@@ -53,6 +55,11 @@ export default function App() {
           })}/>
           <Stack.Screen name="addPlace" component={AddPlace} options={{title: "Add Place"}} />
           <Stack.Screen name="Map" component={Map} options={{ title: 'Select Location' }} />
+          <Stack.Screen
+            name="placeDetails"
+            component={PlaceDetails}
+            options={{ title: 'Place Details' }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>

@@ -11,7 +11,7 @@ import {
 
 import ImagePicker from './ImagePicker';
 import LocationPicker from './LocationPicker';
-import { Place } from 'models/place';
+import Place from 'models/place';
 interface Location {
   lat: number;
   lng: number;

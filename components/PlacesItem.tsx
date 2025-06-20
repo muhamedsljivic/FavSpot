@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
-import { Place } from 'models/place';
+import Place from 'models/place';
 
 interface Props {
   place: Place;

@@ -1,82 +1,111 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, Image } from 'react-native';
-import { getCurrentPositionAsync, useForegroundPermissions } from 'expo-location';
-import { PermissionStatus } from 'expo-location';
-import { getMapPreview } from '../util/location';
-import { useNavigation } from '@react-navigation/native';
+import { useEffect, useState } from 'react';
+import { Alert, View, StyleSheet, Image, Text, Pressable } from 'react-native';
+import {
+  getCurrentPositionAsync,
+  useForegroundPermissions,
+  PermissionStatus,
+} from 'expo-location';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
+import { getAddress, getMapPreview } from '../util/location';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from 'App';
+import { RouteProp } from '@react-navigation/native';
+import { RootStackParamList } from '../App';
 
-export default function LocationPicker() {
-    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-   
-    const [pickedLocation, setPickedLocation] = useState<{ lat: number; lng: number } | undefined>();
-    const [locationPermission, requestPermission] = useForegroundPermissions();
- 
-  async function verifyPermissions() {
-       if (!locationPermission) {
-          return false;
-        }
-    
-        const { status } = locationPermission;
-    
-        if (status === PermissionStatus.UNDETERMINED) {
-          const response = await requestPermission();
-          return response.granted;
-        }
-    
-        if (status === PermissionStatus.DENIED) {
-          Alert.alert(
-            'Insufficient Permission',
-            'You need to grant location permissions to use this feature.'
-          );
-          return false;
-        }
-    
-        return true;
-  }
+interface Location {
+  lat: number;
+  lng: number;
+  address?: string;
+}
 
+interface Props {
+  onPickLocation: (location: Location) => void;
+}
 
-  async function handleLocateUser() {
-    const hasPermission = await verifyPermissions();
-    if(!hasPermission) {
-        return;
+export default function LocationPicker({ onPickLocation }: Props) {
+  const [selectedCoords, setSelectedCoords] = useState<Location | undefined>();
+  const isScreenFocused = useIsFocused();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'addPlace'>>();
+
+  const [permissionInfo, requestPermission] = useForegroundPermissions();
+
+  useEffect(() => {
+    const lat = (route.params as any)?.pickedLat;
+    const lng = (route.params as any)?.pickedLng;
+
+    if (isScreenFocused && lat && lng) {
+      const coords = { lat, lng };
+      setSelectedCoords(coords);
+      console.log('Picked from Map:', coords);
     }
-    
-    const location = await getCurrentPositionAsync();
-    setPickedLocation({
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-    });
+  }, [isScreenFocused, route.params]);
+
+  useEffect(() => {
+    async function fetchAndSetAddress() {
+      if (!selectedCoords) return;
+
+      onPickLocation(selectedCoords);
+      const addr = await getAddress(selectedCoords.lat, selectedCoords.lng);
+      console.log('Resolved Address:', addr);
+      onPickLocation({ ...selectedCoords, address: addr });
+    }
+
+    fetchAndSetAddress();
+  }, [selectedCoords]);
+
+  async function checkPermissions() {
+    if (!permissionInfo) return false;
+
+    const { status } = permissionInfo;
+
+    if (status === PermissionStatus.UNDETERMINED) {
+      const response = await requestPermission();
+      return response.granted;
+    }
+
+    if (status === PermissionStatus.DENIED) {
+      Alert.alert('Permission Required', 'Please grant location access.');
+      return false;
+    }
+
+    return true;
   }
 
-  function handlePickOnMap() {
+  async function detectUserLocation() {
+    const permissionGranted = await checkPermissions();
+    if (!permissionGranted) return;
+
+    const currentLoc = await getCurrentPositionAsync();
+    const coords = {
+      lat: currentLoc.coords.latitude,
+      lng: currentLoc.coords.longitude,
+    };
+    console.log('Device location:', coords);
+    setSelectedCoords(coords);
+  }
+
+  function openMapHandler() {
     navigation.navigate('Map');
   }
 
+  const previewContent = selectedCoords ? (
+    <Image
+      style={styles.image}
+      source={{ uri: getMapPreview(selectedCoords.lat, selectedCoords.lng) }}
+    />
+  ) : (
+    <Text>No location selected.</Text>
+  );
+
   return (
-    <View style={styles.container}>
-      <View style={styles.preview}>
-        {pickedLocation ? (
-            <Image
-            style={styles.mapImage}
-            source={{
-                uri:  getMapPreview(pickedLocation.lat, pickedLocation.lng),
-            }}
-            />
-        ) : (
-            <Text>No location chosen yet.</Text>
-        )}
-        </View>
-
-
+    <View>
+      <View style={styles.mapPreview}>{previewContent}</View>
       <View style={styles.actions}>
-        <Pressable style={styles.button} onPress={handleLocateUser}>
-          <Text style={styles.buttonText}>Locate User</Text>
+        <Pressable style={styles.button} onPress={detectUserLocation}>
+          <Text style={styles.buttonText}>Locate Me</Text>
         </Pressable>
-
-        <Pressable style={styles.button} onPress={handlePickOnMap}>
-          <Text style={styles.buttonText}>Pick on Map</Text>
+        <Pressable style={styles.button} onPress={openMapHandler}>
+          <Text style={styles.buttonText}>Select on Map</Text>
         </Pressable>
       </View>
     </View>
@@ -84,41 +113,33 @@ export default function LocationPicker() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    padding: 20,
-  },
-  preview: {
+  mapPreview: {
     width: '100%',
-    height: 180,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    backgroundColor: '#f2f2f2',
+    height: 200,
+    marginVertical: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#ccc',
+    borderRadius: 6,
+    overflow: 'hidden',
   },
-  previewText: {
-    color: '#888',
+  image: {
+    width: '100%',
+    height: '100%',
   },
   actions: {
     flexDirection: 'row',
-    gap: 12, 
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
   },
   button: {
-    backgroundColor: '#01396d',
+    backgroundColor: '#003b73',
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
+    paddingHorizontal: 18,
+    borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: 'white',
+    fontWeight: 'bold',
   },
-  mapImage: {
-  width: '100%',
-  height: '100%',
-}
-
 });

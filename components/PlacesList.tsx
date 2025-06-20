@@ -1,6 +1,6 @@
 import React from 'react';
 import { FlatList, View, Text, Image, StyleSheet } from 'react-native';
-import Place from '../models/place'; 
+import {Place} from '../models/place'; 
 import PlaceItem from './PlacesItem';
 
 interface Props {

@@ -1,20 +1,27 @@
 export type Location = {
   lat: number;
   lng: number;
+  address: string;
 };
 
-export default class Place {
+export class Place {
   id: string;
   title: string;
+  imageUri: string;
   address: string;
-  location: Location;
-  imageUrl: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
 
-  constructor(title: string, address: string, location: Location, imageUrl: string) {
-    this.id = new Date().toString() + Math.random().toString();
+  constructor(title: string, imageUri: string, location: Location) {
     this.title = title;
-    this.address = address;
-    this.location = location;
-    this.imageUrl = imageUrl;
+    this.imageUri = imageUri;
+    this.address = location.address;
+    this.location = {
+      lat: location.lat,
+      lng: location.lng,
+    };
+    this.id = new Date().toISOString() + Math.random().toString();
   }
 }

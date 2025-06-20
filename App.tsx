@@ -3,12 +3,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AllPlaces from './screens/AllPlaces';
 import AddPlace from './screens/AddPlace';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import IconButton from './UI/IconButton';
 import Map from './screens/Map'; 
+import { Place } from 'models/place';
+import AppLoading from 'expo-app-loading';
+import { initializeDatabase } from './util/database';
 
 export type RootStackParamList = {
-  allPlaces: undefined;
+  allPlaces: {place: Place};
   addPlace: {
     pickedLatitude: number;
     pickedLongitude: number;
@@ -20,6 +23,20 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
+  const [dbInitialized, setDbInitialized] = useState(false);
+  useEffect(() => {
+    initializeDatabase()
+      .then(() => {
+        setDbInitialized(true);
+      })
+      .catch((err: any) => {
+        console.log(err);
+      });
+  }, []);
+
+  if (!dbInitialized) {
+    return <AppLoading />;
+  }
   return (
     <>
       <StatusBar style="auto" />

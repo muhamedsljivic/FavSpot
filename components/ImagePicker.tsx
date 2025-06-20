@@ -6,7 +6,11 @@ import {
 } from 'expo-image-picker';
 import { useState } from 'react';
 
-export default function ImagePicker() {
+interface ImagePickerProps {
+  onImageTaken: (imageUri: string) => void;
+}
+
+export default function ImagePicker({ onImageTaken }: ImagePickerProps) {
   const [permissionInfo, requestPermission] = useCameraPermissions();
   const [imageUri, setImageUri] = useState<string | undefined>();
 
@@ -43,8 +47,10 @@ export default function ImagePicker() {
       quality: 0.5,
     });
 
-if (!image.canceled && image.assets && image.assets.length > 0) {
-      setImageUri(image.assets[0].uri); 
+    if (!image.canceled && image.assets && image.assets.length > 0) {
+      const uri = image.assets[0].uri;
+      setImageUri(uri);
+      onImageTaken(uri);
     }
   };
 
@@ -53,9 +59,9 @@ if (!image.canceled && image.assets && image.assets.length > 0) {
       <View>
         {imageUri && <Image source={{ uri: imageUri }} style={{ width: 200, height: 150 }} />}
       </View>
-        <Pressable style={styles.button} onPress={takePhotoHandler}>
-         <Text style={styles.buttonText}>Take Photo</Text>
-        </Pressable>  
+      <Pressable style={styles.button} onPress={takePhotoHandler}>
+        <Text style={styles.buttonText}>Take Photo</Text>
+      </Pressable>
     </View>
   );
 }

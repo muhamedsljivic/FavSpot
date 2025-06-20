@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
-import Place from '../models/place';
+import { Place } from 'models/place';
 
 interface Props {
   place: Place;
@@ -9,7 +9,7 @@ interface Props {
 export default function PlaceItem({ place, onSelect }: Props) {
     return (
          <Pressable style={styles.item} onPress={onSelect}>
-            <Image source={{ uri: place.imageUrl }} style={styles.image} />
+            <Image source={{ uri: place.imageUri }} style={styles.image} />
             <View>
                 <Text style={styles.title}>{place.title}</Text>
                 <Text>{place.address}</Text>

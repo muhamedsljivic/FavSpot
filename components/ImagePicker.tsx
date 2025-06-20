@@ -1,4 +1,4 @@
-import { Alert, Button, View, Image } from 'react-native';
+import { Alert, Text, View, Image, Pressable, StyleSheet } from 'react-native';
 import {
   launchCameraAsync,
   useCameraPermissions,
@@ -53,7 +53,25 @@ if (!image.canceled && image.assets && image.assets.length > 0) {
       <View>
         {imageUri && <Image source={{ uri: imageUri }} style={{ width: 200, height: 150 }} />}
       </View>
-      <Button title="Take Photo" onPress={takePhotoHandler} />
+        <Pressable style={styles.button} onPress={takePhotoHandler}>
+         <Text style={styles.buttonText}>Take Photo</Text>
+        </Pressable>  
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  button: {
+    marginTop: 16,
+    backgroundColor: '#01396d',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+});
